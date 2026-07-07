@@ -13,6 +13,7 @@ import {
   getAuthorAvatar,
   normalizeMessageAliases,
   removeOwnCommentFromMessage,
+  removeOwnMessageFromList,
   toggleCommentReaction,
   toggleMessageLike,
 } from './messageUtils';
@@ -156,6 +157,27 @@ describe('messageUtils', () => {
     expect(message.author).toBe('匿名用户');
     expect(message.title).toBe('这是一条只填写正文的反馈。');
     expect(message.body).toBe('这是一条只填写正文的反馈。');
+  });
+
+  it('only deletes posts created by the current user', () => {
+    const ownMessage = createMessage(
+      { category: '工作类', title: '测试帖子', body: '这是一条可以删除的测试帖子。', authorName: '匿名用户', isOwn: true },
+      4,
+      '2026-07-06T10:00:00.000Z',
+    );
+    const otherMessage = createMessage(
+      { category: '工作类', title: '保留帖子', body: '这是一条 mock 帖子。', authorName: '海棠' },
+      5,
+      '2026-07-06T11:00:00.000Z',
+    );
+
+    const removedOwn = removeOwnMessageFromList([ownMessage, otherMessage], ownMessage.id);
+    const keptOther = removeOwnMessageFromList([ownMessage, otherMessage], otherMessage.id);
+
+    expect(ownMessage.isOwn).toBe(true);
+    expect(otherMessage.isOwn).toBe(false);
+    expect(removedOwn.map((message) => message.id)).toEqual([otherMessage.id]);
+    expect(keptOther.map((message) => message.id)).toEqual([ownMessage.id, otherMessage.id]);
   });
 
   it('migrates legacy anonymous aliases and hydrates old comment fields', () => {

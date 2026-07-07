@@ -32,6 +32,7 @@ export interface Message {
   createdAt: string;
   title: string;
   body: string;
+  isOwn?: boolean;
   likes: number;
   comments: Comment[];
 }
@@ -41,4 +42,5 @@ export interface MessageInput {
   title: string;
   body: string;
   authorName?: string;
+  isOwn?: boolean;
 }

@@ -18,6 +18,7 @@ interface MessageCardProps {
   onAddComment: (messageId: string, content: string) => void;
   onAddCommentReply: (messageId: string, commentId: string, content: string) => void;
   onDeleteComment: (messageId: string, commentId: string) => void;
+  onDeleteMessage: (messageId: string) => void;
   onToggleCommentReaction: (messageId: string, commentId: string, reaction: CommentReaction) => void;
 }
 
@@ -35,6 +36,7 @@ export function MessageCard({
   onAddComment,
   onAddCommentReply,
   onDeleteComment,
+  onDeleteMessage,
   onToggleCommentReaction,
 }: MessageCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -49,8 +51,15 @@ export function MessageCard({
       return;
     }
 
+    if (label === '删除') {
+      onDeleteMessage(message.id);
+      return;
+    }
+
     onToast(label === '收藏' ? '已收藏' : '已提交举报');
   };
+
+  const menuItems = message.isOwn ? ['收藏', '举报', '复制链接', '删除'] : ['收藏', '举报', '复制链接'];
 
   return (
     <article className={`message-card${isCeoMailbox ? ' ceo-card' : ''}`}>
@@ -113,8 +122,14 @@ export function MessageCard({
           </button>
           {isMenuOpen ? (
             <div className="more-menu" role="menu">
-              {['收藏', '举报', '复制链接'].map((label) => (
-                <button type="button" role="menuitem" key={label} onClick={() => handleMenuAction(label)}>
+              {menuItems.map((label) => (
+                <button
+                  className={label === '删除' ? 'danger-menu-item' : undefined}
+                  type="button"
+                  role="menuitem"
+                  key={label}
+                  onClick={() => handleMenuAction(label)}
+                >
                   {label}
                 </button>
               ))}

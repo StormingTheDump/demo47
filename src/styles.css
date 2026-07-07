@@ -632,6 +632,15 @@ button:disabled {
   color: var(--color-primary-hover);
 }
 
+.more-menu .danger-menu-item {
+  color: var(--color-danger);
+}
+
+.more-menu .danger-menu-item:hover {
+  background: #fff0ed;
+  color: var(--color-danger);
+}
+
 .comment-section {
   margin-top: var(--space-4);
   margin-left: 60px;

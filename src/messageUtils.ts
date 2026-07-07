@@ -161,6 +161,7 @@ export function createMessage(input: MessageInput, existingMessageCount: number,
     createdAt,
     title: trimmedTitle || fallbackTitle,
     body: trimmedBody || trimmedTitle,
+    isOwn: Boolean(input.isOwn),
     likes: 0,
     comments: [],
   };
@@ -225,36 +226,45 @@ export function removeOwnCommentFromMessage(message: MessageShape, commentId: st
   };
 }
 
+export function removeOwnMessageFromList(messages: readonly Message[], messageId: string): Message[] {
+  return messages.map(normalizeMessage).filter((message) => message.id !== messageId || !message.isOwn);
+}
+
 export function normalizeMessageAliases(messages: readonly Message[]): Message[] {
   let commentIndex = 0;
   let replyIndex = 0;
 
-  return messages.map((message, messageIndex) => ({
-    ...message,
-    author: isLegacyAnonymousAlias(message.author) ? pickFlowerAlias(FLOWER_ALIASES, messageIndex) : message.author,
-    comments: message.comments.map((comment) => {
-      const currentCommentIndex = commentIndex;
-      commentIndex += 1;
+  return messages.map((message, messageIndex) => {
+    const author = isLegacyAnonymousAlias(message.author) ? pickFlowerAlias(FLOWER_ALIASES, messageIndex) : message.author;
 
-      return {
-        ...normalizeComment(comment),
-        author: isLegacyAnonymousAlias(comment.author)
-          ? pickFlowerAlias(COMMENT_FLOWER_ALIASES, currentCommentIndex)
-          : comment.author,
-        replies: (comment.replies ?? []).map((reply) => {
-          const currentReplyIndex = replyIndex;
-          replyIndex += 1;
+    return {
+      ...message,
+      author,
+      isOwn: Boolean(message.isOwn) || author === '匿名用户',
+      comments: message.comments.map((comment) => {
+        const currentCommentIndex = commentIndex;
+        commentIndex += 1;
 
-          return {
-            ...reply,
-            author: isLegacyAnonymousAlias(reply.author)
-              ? pickFlowerAlias(COMMENT_FLOWER_ALIASES, currentReplyIndex + 3)
-              : reply.author,
-          };
-        }),
-      };
-    }),
-  }));
+        return {
+          ...normalizeComment(comment),
+          author: isLegacyAnonymousAlias(comment.author)
+            ? pickFlowerAlias(COMMENT_FLOWER_ALIASES, currentCommentIndex)
+            : comment.author,
+          replies: (comment.replies ?? []).map((reply) => {
+            const currentReplyIndex = replyIndex;
+            replyIndex += 1;
+
+            return {
+              ...reply,
+              author: isLegacyAnonymousAlias(reply.author)
+                ? pickFlowerAlias(COMMENT_FLOWER_ALIASES, currentReplyIndex + 3)
+                : reply.author,
+            };
+          }),
+        };
+      }),
+    };
+  });
 }
 
 export function formatDateTime(value: string): string {
@@ -337,6 +347,14 @@ function normalizeComment(comment: Comment): Comment {
     isOwn: Boolean(comment.isOwn),
     reactions: normalizeCommentReactions(comment.reactions),
     replies: [...(comment.replies ?? [])],
+  };
+}
+
+function normalizeMessage(message: Message): Message {
+  return {
+    ...message,
+    isOwn: Boolean(message.isOwn) || message.author === '匿名用户',
+    comments: message.comments.map(normalizeComment),
   };
 }
 

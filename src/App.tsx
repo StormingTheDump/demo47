@@ -11,6 +11,7 @@ import {
   createMessage,
   filterAndSortMessages,
   removeOwnCommentFromMessage,
+  removeOwnMessageFromList,
   toggleMessageLike,
   updateCommentReactionInMessage,
 } from './messageUtils';
@@ -68,7 +69,7 @@ export default function App() {
   );
 
   const handleCreateMessage = (input: MessageInput) => {
-    const nextMessage = createMessage(input, messages.length, new Date().toISOString());
+    const nextMessage = createMessage({ ...input, isOwn: true }, messages.length, new Date().toISOString());
 
     setMessages((current) => [nextMessage, ...current]);
     setActiveCategory(input.category);
@@ -81,6 +82,34 @@ export default function App() {
       return next;
     });
     showToast('已发布');
+  };
+
+  const handleDeleteOwnMessage = (messageId: string) => {
+    const targetMessage = messages.find((message) => message.id === messageId);
+
+    setMessages((current) => removeOwnMessageFromList(current, messageId));
+    setLikedMessageIds((current) => {
+      const next = new Set(current);
+      next.delete(messageId);
+      return next;
+    });
+    setCommentReactionSelections((current) => {
+      if (!targetMessage) {
+        return current;
+      }
+
+      const commentIds = new Set(targetMessage.comments.map((comment) => comment.id));
+      const next = { ...current };
+      commentIds.forEach((commentId) => delete next[commentId]);
+      return next;
+    });
+    setHiddenCommentIds((current) => {
+      const next = new Set(current);
+      next.delete(messageId);
+      return next;
+    });
+    setComposerMessageId((current) => (current === messageId ? null : current));
+    showToast(targetMessage?.isOwn ? '已删除帖子' : '只能删除自己发布的帖子');
   };
 
   const handleToggleLike = (messageId: string) => {
@@ -267,6 +296,7 @@ export default function App() {
                 onAddComment={handleAddComment}
                 onAddCommentReply={handleAddCommentReply}
                 onDeleteComment={handleDeleteOwnComment}
+                onDeleteMessage={handleDeleteOwnMessage}
                 onToggleCommentReaction={handleToggleCommentReaction}
               />
             );
