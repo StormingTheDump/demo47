@@ -28,6 +28,12 @@ npm run dev
 
 浏览器打开终端中显示的本地地址，通常是 `http://localhost:5173/`。
 
+## 在线预览
+
+GitHub Pages 地址：`https://stormingthedump.github.io/demo47/`
+
+推送到 `main` 分支后，GitHub Actions 会自动构建并部署到 GitHub Pages。本地开发仍使用根路径运行，不受 Pages 路径影响。
+
 ## 验证
 
 ```bash
